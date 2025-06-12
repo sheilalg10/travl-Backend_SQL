@@ -36,3 +36,4 @@ yarn.lock
 
 # Otros archivos temporales
 *.tmp
+.txt

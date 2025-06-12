@@ -1,0 +1,57 @@
+CREATE TABLE users (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(100),
+  email VARCHAR(100) UNIQUE,
+  password VARCHAR(255),
+  role VARCHAR(50)
+);
+
+
+CREATE TABLE rooms (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  roomNumber VARCHAR(10),
+  name VARCHAR(100),
+  bedType VARCHAR(50),
+  roomFloor VARCHAR(10),
+  facilities JSON,
+  rate DECIMAL(10, 2),
+  image BLOB,
+  status ENUM('Available', 'Booked', 'Maintenance') DEFAULT 'Available',
+  description TEXT
+);
+
+CREATE TABLE bookings (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  clientId INT,
+  roomId INT,
+  checkIn DATE,
+  checkOut DATE,
+  status ENUM('Refund', 'Booked', 'Pending', 'Cancelled') DEFAULT 'Refund',
+  FOREIGN KEY (clientId) REFERENCES clients(id),
+  FOREIGN KEY (roomId) REFERENCES rooms(id)
+);
+
+CREATE TABLE employees (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  image VARCHAR(255),
+  name VARCHAR(100),
+  joined DATE,
+  jobDesk JSON,
+  schedule JSON,
+  contact VARCHAR(100),
+  status ENUM('Active','Inactive') DEFAULT 'Active'
+);
+
+CREATE TABLE clients (
+ id INT AUTO_INCREMENT PRIMARY KEY,
+ name VARCHAR(100),
+ image VARCHAR(255),
+ orderDate DATE
+ checkIn DATE,
+ checkOut DATE,
+ status ENUM('Check In','Check Out', 'Booked', 'Cancelled') DEFAULT 'Check In',
+ roomId INT
+);
+
+
+
