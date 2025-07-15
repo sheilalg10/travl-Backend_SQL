@@ -1,82 +1,86 @@
-import { Request, Response } from "express";
-import {
-  createRoom,
-  deleteRoom,
-  getAllRooms,
-  getRoomById,
-  updateRoom,
-} from "../services/roomService";
+import { Router } from 'express';
+import Room from '../database/models/rooms';
 
-// Muestra todas las habitaciones
-export const getRooms = async (req: Request, res: Response) => {
-  try {
-    const rooms = await getAllRooms();
-    res.status(200).json(rooms);
-  } catch (error) {
-    console.error("Error al obtener las habitaciones:", error);
-    res.status(500).json({ message: "Error al obtener las habitaciones" });
-  }
-};
 
-// Muestra una habitacion por su id
-export const getRoom = async (req: Request, res: Response) => {
-  try {
-    const id = req.params.id;
-    const room = await getRoomById(id);
+const router = Router();
 
-    if (!room) {
-      return res.status(404).json({ message: "Habitación no encontrada" });
+router.get('/', async (req, res) => {
+    const rooms = await Room.find();
+    res.json(rooms);
+});
+
+router.get('/:id', async (req, res) => {
+    try {
+        const room = await Room.findById(req.params.id);
+
+        if (!room) {
+            res.status(500).json({ message: 'Habitación no encontrada' });
+            return;
+        }
+
+        res.json(room);
+    } catch (error) {
+        res.status(500).json({ message: 'Error al buscar habitación', error });
+    }  
+});
+
+
+router.post('/', async (req, res) => {
+    try {
+        const { roomNumber, roomName, bedType, roomFloor, facilities, rate, roomImage, roomStatus, description } = req.body;
+
+        if ( !roomNumber || !roomName || !bedType || !roomFloor || !facilities || !rate || !roomImage || !roomStatus || !description ) {
+            res.status(400).json({ message: 'Todos los campos son obligatorios' });
+            return;
+        }
+
+        const newRoom = new Room ({ roomNumber, roomName, bedType, roomFloor, facilities, rate, roomImage, roomStatus, description })
+
+        const savedRoom = await newRoom.save();
+        res.status(201).json(savedRoom);
+    } catch (error) {
+        res.status(500).json({ message: 'Error al agregar booking', error })
     }
+});
 
-    res.status(200).json(room);
-  } catch (error) {
-    console.error("Error al obtener la habitación:", error);
-    res.status(500).json({ message: "Error al obtener la habitación" });
-  }
-};
+router.put('/:id', async (req, res) => {
+    try {
+        const { roomNumber, roomName, bedType, roomFloor, facilities, rate, roomImage, roomStatus, description } = req.body;
 
-// Crear una nueva habitacion
-export const createNewRoom = async (req: Request, res: Response) => {
-  try {
-    const newRoom = await createRoom(req.body);
-    res.status(201).json(newRoom);
-  } catch (error) {
-    console.error("Error al crear la habitación:", error);
-    res.status(500).json({ message: "Error al crear la habitación" });
-  }
-};
+        if ( !roomNumber || !roomName || !bedType || !roomFloor || !facilities || !rate || !roomImage || !roomStatus || !description ) {
+            res.status(400).json({ message: 'Todos los campos son obligatorios' });
+            return;
+        }
 
-// Actualiza una habitacion
-export const updateRoomById = async (req: Request, res: Response) => {
-  try {
-    const id = req.params.id;
-    const updatedRoom = await updateRoom(id, req.body);
+        const updateRoom = await Room.findByIdAndUpdate(
+            req.params.id,
+            { roomNumber, roomName, bedType, roomFloor, facilities, rate, roomImage, roomStatus, description },
+            { new: true, runValidators: true }
+        )
 
-    // if (!updatedRoom) {
-    //   return res.status(404).json({ message: 'Habitación no encontrada' });
-    // }
+        if (!updateRoom) {
+            res.status(404).json({ message: 'Habitación no encontrada' });
+        }
+        
+        res.json(updateRoom);
+    } catch (error) {
+        res.status(500).json({ message: 'Error al agregar habitación', error })
+    }
+})
 
-    res.status(200).json(updatedRoom);
-  } catch (error) {
-    console.error("Error al actualizar la habitación:", error);
-    res.status(500).json({ message: "Error al actualizar la habitación" });
-  }
-};
+router.delete('/:id', async (req, res) => {
+    try {
+        const room = await Room.findByIdAndDelete(req.params.id);
 
-// Elimina una habitacion
-export const deleteRoomById = async (req: Request, res: Response) => {
-  try {
-    const id = req.params.id;
-    const deleted = await deleteRoom(id);
+        if (!room) {
+            res.status(500).json({ message: 'Habitación no encontrada' });
+            return;
+        }
 
-    // if (!deleted) {
-    //   return res.status(404).json({ message: "Habitación no encontrada" });
-    // }
+        res.json({ message: 'Habitación eliminada correctamente', room });
+    } catch (error) {
+        res.status(500).json({ message: 'Error al eliminar habitación', error })
+    }
+})
 
-    res.status(200).json({ message: 'Habitación eliminada correctamente' });
-
-  } catch (error) {
-    console.error('Error al eliminar la habitación:', error);
-    res.status(500).json({ message: 'Error al eliminar la habitación' });
-  }
-};
+export default router;
